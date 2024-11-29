@@ -11,7 +11,7 @@ def visualize_mappings(dateiname: str, element:str):
     try:
         data = pd.read_csv(f"data/{dateiname}.csv", header=None).values
     except FileNotFoundError:
-        raise FileNotFoundError(f"Fehlercode: f002 : Die Datei {dateiname}.csv wurde nicht gefunden")
+        raise FileNotFoundError(f"{Path(__file__).name} line 12: Die Datei {dateiname}.csv wurde nicht gefunden")
     # Wertebereich für das entsprechende Element definieren
     # cmap für das entsprechende Element festlegen
     if element == "C":
@@ -26,6 +26,8 @@ def visualize_mappings(dateiname: str, element:str):
     elif element == "Zr":
         vmin, vmax = 2300, 3200
         cmap = plt.get_cmap('Oranges')
+    else:
+        raise ValueError(f"{Path(__file__).name} line 17+: Das Element *{element}*, welches in *{dateiname}.csv* angegeben ist, ist nicht bekannt.")
 
     # Werte außerhalb des Bereichs auf Schwarz setzen
     cmap.set_under('black')  # Werte unterhalb von vmin
@@ -65,7 +67,7 @@ def main()->int:
     try:
         diretorycontent: list[str] = os.listdir("data") #type: ignore
     except FileNotFoundError:
-        raise FileNotFoundError(f"Fehlercode: f001 : Der Ordner 'data' existiert nicht.")
+        raise FileNotFoundError(f"{Path(__file__).name} line 68: Der Ordner 'data' existiert nicht.")
     
     counter: int = 0
     for os_file in diretorycontent:
@@ -78,11 +80,14 @@ def main()->int:
     
 if __name__ == "__main__":
     begin = time.perf_counter()
-    logging.basicConfig(filename="log_visualizeMappings.log",filemode="a",level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename="log_visualizeMappings.log",filemode="a",level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s - %(message)s')
+    auswertungsdurchlaeufe = 0
     try:
         setup_output_directories()
         auswertungsdurchlaeufe = main()
     except FileNotFoundError as e:
+        logging.error(e)
+    except ValueError as e:
         logging.error(e)
     except Exception as e:
         logging.error(f"Ein unbekannter Fehler ist aufgetreten: {e}")
