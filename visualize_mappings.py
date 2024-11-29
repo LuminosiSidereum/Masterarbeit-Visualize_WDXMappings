@@ -4,24 +4,27 @@ import pandas as pd #type: ignore
 import os
 from pathlib import Path
 import logging
+import time
 
 def visualize_mappings(dateiname: str, element:str):
     # CSV-Datei einlesen (ohne Header und Index)
-    data = pd.read_csv(f"data/{dateiname}.csv", header=None).values
-
+    try:
+        data = pd.read_csv(f"data/{dateiname}.csv", header=None).values
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Fehlercode: f002 : Die Datei {dateiname}.csv wurde nicht gefunden")
     # Wertebereich für das entsprechende Element definieren
     # cmap für das entsprechende Element festlegen
     if element == "C":
         vmin, vmax = 150, 450
         cmap = plt.get_cmap('Greens')
     elif element == "N":
-        vmin, vmax = 0, 60
+        vmin, vmax = 0, 70
         cmap = plt.get_cmap('Blues')
     elif element == "Fe":
-        vmin, vmax = 15, 1000
+        vmin, vmax = 15, 1100
         cmap = plt.get_cmap('Reds')
     elif element == "Zr":
-        vmin, vmax = 2400, 3200
+        vmin, vmax = 2300, 3200
         cmap = plt.get_cmap('Oranges')
 
     # Werte außerhalb des Bereichs auf Schwarz setzen
@@ -51,31 +54,37 @@ def visualize_mappings(dateiname: str, element:str):
     plt.savefig(f"svg-output/{dateiname}.svg", format='svg')  # SVG speichern
     plt.savefig(f"png-output/{dateiname}.png", format='png', dpi=300)  # PNG speichern
     plt.close()
+    print(f"Visualisierung für {dateiname} ({element}) wurde erstellt.")
 
 def setup_output_directories():
     # Erstelle Ausgabeordner, falls sie noch nicht existieren
     for directory in ["svg-output", "png-output"]:
         os.makedirs(directory, exist_ok=True)
         
-def main():
+def main()->int:
     try:
-        diretorycontent: list[str] = os.listdir("data")
+        diretorycontent: list[str] = os.listdir("data") #type: ignore
     except FileNotFoundError:
-        raise FileNotFoundError("Der Ordner 'data' existiert nicht!")
+        raise FileNotFoundError(f"Fehlercode: f001 : Der Ordner 'data' existiert nicht.")
     
+    counter: int = 0
     for os_file in diretorycontent:
-        file: Path = Path(os_file)
+        file: Path = Path(os_file) #type: ignore
         if file.suffix == ".csv":
             element = file.stem.split("_")[-1]
             visualize_mappings(file.stem, element)
-    
+            counter += 1
+    return counter
     
 if __name__ == "__main__":
-    #logging.basicConfig(level=logging.INFO)
-    # try:
+    begin = time.perf_counter()
+    logging.basicConfig(filename="log_visualizeMappings.log",filemode="a",level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    try:
         setup_output_directories()
-        main()
-    #except FileNotFoundError as e:
-    #    logging.error(e)
-    # except Exception as e:
-    #     logging.error(f"Ein unbekannter Fehler ist aufgetreten! {e}")
+        auswertungsdurchlaeufe = main()
+    except FileNotFoundError as e:
+        logging.error(e)
+    except Exception as e:
+        logging.error(f"Ein unbekannter Fehler ist aufgetreten: {e}")
+    end = time.perf_counter()
+    logging.info(f"Das Programm wurde in {end-begin:.3f} Sekunden ausgefuehrt. Dabei wurden {auswertungsdurchlaeufe} CSV-Dateien visualisiert.")
