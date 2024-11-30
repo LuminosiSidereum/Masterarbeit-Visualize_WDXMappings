@@ -6,7 +6,9 @@ from pathlib import Path
 import logging
 import time
 
-def visualize_mappings(dateiname: str, element:str):
+logging.getLogger(__name__)
+
+def visualize_mappings(dateiname: str, element:str)->bool:
     """
     Visualizes the mappings of a given element from a CSV file as a heatmap.
     This function reads data from a specified CSV file, determines the value range and colormap 
@@ -25,8 +27,10 @@ def visualize_mappings(dateiname: str, element:str):
     # CSV-Datei einlesen (ohne Header und Index)
     try:
         data = pd.read_csv(f"data/{dateiname}.csv", header=None).values
-    except FileNotFoundError:
-        raise FileNotFoundError(f"{Path(__file__).name} code: visu_01: Die Datei {dateiname}.csv wurde nicht gefunden")
+    except FileNotFoundError as e:
+        logging.error(f"{e}")
+        return False
+    
     # Wertebereich für das entsprechende Element definieren
     # cmap für das entsprechende Element festlegen
     if element == "C":
@@ -42,8 +46,9 @@ def visualize_mappings(dateiname: str, element:str):
         vmin, vmax = 2300, 3200
         cmap = plt.get_cmap('Oranges')
     else:
-        raise ValueError(f"{Path(__file__).name} code: visu_02 : Das Element *{element}*, welches in *{dateiname}.csv* angegeben ist, ist nicht bekannt.")
-
+        logging.error(f"Das Element *{element}*, welches in *{dateiname}.csv* angegeben ist, ist nicht bekannt.")
+        return False
+    
     # Werte außerhalb des Bereichs auf Schwarz setzen
     cmap.set_under('black')  # Werte unterhalb von vmin
     cmap.set_over('black')   # Werte oberhalb von vmax
@@ -72,6 +77,7 @@ def visualize_mappings(dateiname: str, element:str):
     plt.savefig(f"png-output/{dateiname}.png", format='png', dpi=300)  # PNG speichern
     plt.close()
     print(f"Visualisierung für {dateiname} ({element}) wurde erstellt.")
+    return True
 
 def setup_output_directories()->None:
     """
@@ -101,30 +107,32 @@ def main()->int:
     
     try:
         diretorycontent: list[str] = os.listdir("data") #type: ignore
-    except FileNotFoundError:
-        raise FileNotFoundError(f"{Path(__file__).name} code: main_01 : Der Ordner 'data' existiert nicht.")
-    
+    except FileNotFoundError as e:
+        logging.error(f"{e}")
+        raise FileNotFoundError()
+        
+    setup_output_directories()
     counter: int = 0
+    
     for os_file in diretorycontent:
         file: Path = Path(os_file) #type: ignore
         if file.suffix == ".csv":
             element = file.stem.split("_")[-1]
-            visualize_mappings(file.stem, element)
+            korrektAusgefuehrt = visualize_mappings(file.stem, element)
+        if korrektAusgefuehrt:
             counter += 1
     return counter
     
 if __name__ == "__main__":
-    begin = time.perf_counter()
-    logging.basicConfig(filename="log_visualizeMappings.log",filemode="a",level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s - %(message)s')
-    auswertungsdurchlaeufe = 0
+    logging.basicConfig(filename="log_visualizeMappings.log",filemode="a",level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s - linieno %(lineno)d - %(message)s')
     try:
-        setup_output_directories()
-        auswertungsdurchlaeufe = main()
+        begin = time.perf_counter()
+        auswertungsdurchlaeufe: int = main()
+        end = time.perf_counter()
+        logging.info(f"Das Programm wurde in {end-begin:.3f} Sekunden ausgefuehrt. Dabei wurden {auswertungsdurchlaeufe} CSV-Dateien visualisiert.")
     except FileNotFoundError as e:
-        logging.error(e)
-    except ValueError as e:
-        logging.error(e)
+        logging.critical("Das Programm wurde vorzeitig beendet.",exc_info=True)
+        quit()
     except Exception as e:
-        logging.critical(f"Ein unbekannter Fehler ist aufgetreten: {e}", exc_info=True)
-    end = time.perf_counter()
-    logging.info(f"Das Programm wurde in {end-begin:.3f} Sekunden ausgefuehrt. Dabei wurden {auswertungsdurchlaeufe} CSV-Dateien visualisiert.")
+        logging.critical(f"Ein unbekannter Fehler ist aufgetreten: {e}: Das Programm wurde vorzeitig beeendet.", exc_info=True)
+        quit()
