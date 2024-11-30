@@ -125,6 +125,6 @@ if __name__ == "__main__":
     except ValueError as e:
         logging.error(e)
     except Exception as e:
-        logging.error(f"Ein unbekannter Fehler ist aufgetreten: {e}")
+        logging.critical(f"Ein unbekannter Fehler ist aufgetreten: {e}", exc_info=True)
     end = time.perf_counter()
     logging.info(f"Das Programm wurde in {end-begin:.3f} Sekunden ausgefuehrt. Dabei wurden {auswertungsdurchlaeufe} CSV-Dateien visualisiert.")
