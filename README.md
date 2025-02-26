@@ -1,15 +1,27 @@
-# Masterarbeit-Visualize_WDXMappings
-## What does the program do?
-Creates heatmaps of the wdx mapping data, saved as csv-files in the data directory, and stores them as png and svg.
-The svg-files can be further modivied using Inkscape or CorelDraw.
+# WDX Mapping Visualisierung
 
-The latest file, which was saved as png and svg, is shown on the terminal.
+## Funktionsweise
+Dieses Programm erstellt Heatmaps aus den `.csv`-Dateien, die mit dem **WDX CSV Ersteller** generiert wurden.  
+Die Visualisierungen werden als `.png` zur direkten Nutzung und als `.svg` zur Weiterverarbeitung in Grafikprogrammen gespeichert.  
+Fehlermeldungen und die Laufzeit des Programms werden in der Log-Datei `log_visualizeMappings.log` gespeichert.  
 
-The errors as well as the runtime of the program are logged in the logilfe: `log_viszualieMappings.log`
+## Nutzung des Skripts
+### Eingabedaten
+- Das Skript erwartet `.csv`-Dateien im Verzeichnis `data/`.  
+- Die Dateien enthalten Messwerte ohne Header oder Index.  
+- Der Dateiname muss das zu visualisierende Element enthalten, da dieser für die Skalierung und Farbwahl verwendet wird.  
+- Unterstützte Elemente:  
+  - **C** → Skalierung: 150–450, Farbe: Grün  
+  - **N** → Skalierung: 0–70, Farbe: Blau  
+  - **Fe** → Skalierung: 15–1100, Farbe: Rot  
+  - **Zr** → Skalierung: 2300–3200, Farbe: Orange  
 
-## How to interact with the program
-1. Create csv-files which contain only the values for each pixel of the heatmap (not header or index)
-2. Properly name the csv-filse, because the name of the csv-file will appear in the png and the heatmaps will be named like the csv as well.
-3. Put all the csv-files into the `data` directory
-4. Run `visualize_mappings.py`
-5. After completion of the skript, you will find the heatmaps in the subdirctories `png-output` and `svg-output`  
+### Ausführung
+1. Stelle sicher, dass sich die `.csv`-Dateien im Ordner `data/` befinden.  
+2. Starte das Skript `visualize_mappings.py`.  
+3. Das Skript visualisiert alle `.csv`-Dateien und speichert die Ergebnisse.  
+
+### Ausgabe
+- **PNG-Dateien** zur direkten Nutzung (`png-output/`).  
+- **SVG-Dateien** zur Weiterverarbeitung (`svg-output/`).  
+- Die Dateien behalten den Namen der `.csv`-Datei.  
